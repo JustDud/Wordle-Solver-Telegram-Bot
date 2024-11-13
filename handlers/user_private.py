@@ -5,8 +5,16 @@ from aiogram.fsm.state import StatesGroup, State
 
 from filters.chat_types import ChatTypesFilter
 from keyboards.reply import get_keyboard
+from main import guess_word_bot
+from main import words
 
-guess = "TEST WORD"
+global guess
+global stop
+
+guess = 'crate'
+stop = False
+
+
 
 user_private_router = Router()
 user_private_router.message.filter(ChatTypesFilter(['private']))
@@ -27,11 +35,12 @@ class SolveWordle(StatesGroup):
     sixth_guess = State()
 
 
-async def get_data(message: types.Message, state: FSMContext):
-    await state.clear()
+async def get_clue(message: types.Message, state: FSMContext):
     await state.update_data(clue=message.text)
-    clue = await state.get_data()
-    await message.answer(str(clue))
+    data = await state.get_data()
+    clue = list(data['clue'])
+    await print(clue)
+    await state.clear()
     return clue
 
 @user_private_router.message(StateFilter(None), CommandStart())
@@ -44,51 +53,85 @@ async def solve_command(message: types.Message, state: FSMContext):
     await message.answer("Rules: enter the clue from Wordle in the form such that:"
                          "Grey -> 0, Yellow -> 1, Green -> 2"
                          "\nIf the word has been guessed, send 'STOP' "
-                         "\n\nFor your first guess type in 'CRANE', and send me the clue back!",
+                         "\n\nFor your first guess type in 'CRATE', and send me the clue back!",
                          reply_markup=types.ReplyKeyboardRemove())
     await state.set_state(SolveWordle.first_guess)
 
 
 @user_private_router.message(StateFilter(SolveWordle.first_guess), F.text.lower() != 'stop')
 async def solve_first_guess(message: types.Message, state: FSMContext):
-    clue = get_data(message, state)
+    global guess
+    global stop
+    await state.clear()
+    await state.update_data(clue=message.text)
+    data = await state.get_data()
+    clue = list(data['clue'])
+    guess = guess_word_bot(stop, words, guess, clue)
     await message.answer(f"Type in the word - '{guess}', and send me the clue back!")
     await state.set_state(SolveWordle.second_guess)
 
 
 @user_private_router.message(StateFilter(SolveWordle.second_guess), F.text.lower() != 'stop')
 async def solve_second_guess(message: types.Message, state: FSMContext):
+    global guess
+    global stop
     await state.clear()
     await state.update_data(clue=message.text)
+    data = await state.get_data()
+    clue = list(data['clue'])
+    guess = guess_word_bot(stop, words, guess, clue)
     await message.answer(f"Type in the word - '{guess}', and send me the clue back!")
-    clue = await state.get_data()
-    await message.answer(str(clue))
     await state.set_state(SolveWordle.third_guess)
 
 
 @user_private_router.message(StateFilter(SolveWordle.third_guess), F.text.lower() != 'stop')
 async def solve_third_guess(message: types.Message, state: FSMContext):
+    global guess
+    global stop
+    await state.clear()
     await state.update_data(clue=message.text)
+    data = await state.get_data()
+    clue = list(data['clue'])
+    guess = guess_word_bot(stop, words, guess, clue)
     await message.answer(f"Type in the word - '{guess}', and send me the clue back!")
     await state.set_state(SolveWordle.fourth_guess)
 
 
 @user_private_router.message(StateFilter(SolveWordle.fourth_guess), F.text.lower() != 'stop')
 async def solve_fourth_guess(message: types.Message, state: FSMContext):
+    global guess
+    global stop
+    await state.clear()
     await state.update_data(clue=message.text)
+    data = await state.get_data()
+    clue = list(data['clue'])
+    guess = guess_word_bot(stop, words, guess, clue)
     await message.answer(f"Type in the word - '{guess}', and send me the clue back!")
     await state.set_state(SolveWordle.fifth_guess)
 
 
 @user_private_router.message(StateFilter(SolveWordle.fifth_guess), F.text.lower() != 'stop')
 async def solve_fifth_guess(message: types.Message, state: FSMContext):
+    global guess
+    global stop
+    await state.clear()
     await state.update_data(clue=message.text)
+    data = await state.get_data()
+    clue = list(data['clue'])
+    guess = guess_word_bot(stop, words, guess, clue)
     await message.answer(f"Type in the word - '{guess}', and send me the clue back!")
     await state.set_state(SolveWordle.sixth_guess)
 
 
 @user_private_router.message(StateFilter(SolveWordle.sixth_guess), F.text.lower() != 'stop')
 async def solve_sixth_guess(message: types.Message, state: FSMContext):
+    global guess
+    global stop
+    await state.clear()
+    await state.update_data(clue=message.text)
+    data = await state.get_data()
+    clue = list(data['clue'])
+    guess = guess_word_bot(stop, words, guess, clue)
     await message.answer(f"Type in the word - '{guess}'", reply_markup=START_KB)
     await state.set_state(None)
 

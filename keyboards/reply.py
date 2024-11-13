@@ -23,6 +23,3 @@ def get_keyboard(
         resize_keyboard=True,
         input_field_placeholder=placeholder
     )
-
-
-delete_kb = ReplyKeyboardRemove()

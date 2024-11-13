@@ -7,9 +7,7 @@ from keyboards.reply import get_keyboard
 admin_router = Router()
 admin_router.message.filter(ChatTypesFilter(['private']), IsAdmin())
 
-ADMIN_KB = get_keyboard("Statistics", "AdminBTN2",
-                             placeholder='Choose an action',
-                             sizes=(2, ))
+ADMIN_KB = get_keyboard("Statistics", "AdminBTN2", placeholder='Choose an action', sizes=(2, ))
 
 
 @admin_router.message(Command("admin"))

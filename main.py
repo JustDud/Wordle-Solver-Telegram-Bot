@@ -3,28 +3,33 @@ import math
 import random
 
 global previous_guesses
-previous_guesses = []
-
-with open('words.txt', 'r') as file:
-    words = [line.strip() for line in file]
 
 
 # generating the clue (which letters are right and which are not) for the word entered
 def generate_clue(guess: str, word: str) -> str:
-    clue = []
+    """
+        Generates a clue for the given guess compared to a single actual word.
 
-    for guess_char, word_char in zip(guess, word):
-        if guess_char == word_char:
-            # Appending G which stands for Green
-            clue.append("G")
-        elif guess_char in secret_word:
-            # Appending Y which stands for Yellow
-            clue.append("Y")
-        else:
-            # Appending B which stands for Black (Not grey as G is taken)
-            clue.append("B")
+        :param guess: The guessed word.
+        :param word: The actual word.
+        :return: Clue string (e.g., "GBYBB").
+        """
+    clue = ["B"] * 5  # Start with all Black clues
+    word_remaining = list(word)  # Track unused letters in the word
 
-    return ''.join(clue)
+    # First pass: Mark all Greens
+    for i in range(5):
+        if guess[i] == word[i]:
+            clue[i] = "G"  # Mark Green
+            word_remaining[i] = None  # Mark as matched and unavailable for Yellow
+
+    # Second pass: Mark Yellows
+    for i in range(5):
+        if clue[i] == "B" and guess[i] in word_remaining:
+            clue[i] = "Y"  # Mark Yellow
+            word_remaining[word_remaining.index(guess[i])] = None  # Mark as used
+
+    return "".join(clue)
 
 
 # The function runs a guess against all possible hidden words and counts clue frequencies
@@ -39,7 +44,7 @@ def entropy_calculate(words: list[str], guess: str) -> float:
         else:
             clue_frequency[clue] = 1
 
-    entropy = 0
+    entropy = 0.0
     total_words = len(words)
 
     for frequency in clue_frequency.values():
@@ -50,172 +55,81 @@ def entropy_calculate(words: list[str], guess: str) -> float:
 
 
 # Suggests the best next guess by calculating the entropy for each possible guess
-def suggest_best_guess(words: list[str], previous_guesses: list[str]) -> str:
-    best_guess = None
-    max_entropy = -1
+def suggest_best_guesses(words: list[str], previous_guesses: list[str], clue: list[str]) -> list[str]:
+    best_guess_list = []
 
     for guess in words:
         if guess in previous_guesses:
             continue  # Skip previously guessed words
 
         entropy = entropy_calculate(words, guess)
-        if entropy > max_entropy:
-            max_entropy = entropy
-            best_guess = guess
 
-    return best_guess
+        if len(best_guess_list) < 5 and guess:
+            best_guess_list.append((entropy,guess))
+            best_guess_list.sort(reverse=True, key=lambda x: x[0])
+        else:
+            if entropy > best_guess_list[-1][0]:
+                best_guess_list[-1] = (entropy, guess)
+                best_guess_list.sort(reverse=True, key=lambda x: x[0])
+    return [guess for _, guess in best_guess_list]
+
 
 # Update the list of words after the guess based on the clue given
-def words_update(words: list[str], guess: str, clue: str) -> list:
+def words_update(words: list[str], guess: str, clue: list[str]) -> list:
+    for i in range(len(words) - 1, -1, -1):
+        word = words[i]
+        valid = True
+        green_positions = {j for j in range(5) if clue[j] == "G"}
+        yellow_letters = {guess[j] for j in range(5) if clue[j] == "Y"}
 
-
-
-    # clue_list = list(clue)  # Convert clue string to a list
-    # print(f"Clue words update {clue_list}")
-    # print(guess)
-    #
-    # clue_list = list(clue)  # Convert clue string to list
-    #
-    # # Precompute constraints for efficient lookup
-    # greens = {i: guess[i] for i in range(5) if clue_list[i] == "G"}
-    # yellows = {guess[i] for i in range(5) if clue_list[i] == "Y"}
-    # blacks = {guess[i] for i in range(5) if clue_list[i] == "B"}
-    #
-    # def is_word_valid(word: str) -> bool:
-    #     """
-    #     Efficiently validates if the word matches the guess and clue constraints.
-    #
-    #     :param word: Word to check
-    #     :return: True if the word is valid, False otherwise
-    #     """
-    #     # Check for Greens (exact match positions)
-    #     for i, char in greens.items():
-    #         if word[i] != char:
-    #             return False
-    #
-    #     # Check for Yellows (present but not in the same position)
-    #     for i in range(5):
-    #         if clue_list[i] == "Y":
-    #             if guess[i] not in word or word[i] == guess[i]:
-    #                 return False
-    #
-    #     # Check for Blacks (must not be present anywhere in the word)
-    #     for char in blacks:
-    #         if char in word:
-    #             return False
-    #
-    #     # Also ensure all yellows exist in the word
-    #     if not yellows.issubset(set(word)):
-    #         return False
-    #
-    #     return True
-    #
-    # # Modify the original list in place
-    # words[:] = [word for word in words if is_word_valid(word)]
-    # return words
-
-    for word in words[:]:
-        if word == "apple":
-            print("APPLE")
         for index_char in range(5):
-
-            if clue[index_char] == "G" and guess[index_char] != word[index_char]:
-                if word == "apple":
-                    print("APPLE")
-                    print(clue[index_char], guess[index_char])
-                words.remove(word)
-                break
-
-            elif clue[index_char] == "Y" and guess[index_char] not in word:
-                if word == "apple":
-                    print("APPLE")
-                    print(clue[index_char], guess[index_char])
-                words.remove(word)
-                break
-
-            elif clue[index_char] == "B" and guess[index_char] in word:
-                if word == "apple":
-                    print("APPLE")
-                    print(clue[index_char], guess[index_char])
-
-                words.remove(word)
-                break
+            if clue[index_char] == "G":
+                if guess[index_char] != word[index_char]:
+                    valid = False
+                    break
+            elif clue[index_char] == "Y":
+                if guess[index_char] not in word or guess[index_char] == word[index_char]:
+                    valid = False
+                    break
+            elif clue[index_char] == "B":
+                if guess[index_char] in word:
+                    # Ensure Black is valid unless it's required by a Green/Yellow elsewhere.
+                    if not any(guess[index_char] == word[pos] for pos in green_positions):
+                        valid = False
+                        break
+        if not valid:
+            words.pop(i)
 
     return words
 
 
-def guess_word(words: list[str], guess: str, secret_word: str, previous_guesses: list[str]) -> str:
-    # guess_attempts = 0
-    while secret_word != guess:
-        entropy = entropy_calculate(words, guess)
-        print(f"Entropy for '{guess}': {entropy:.4f} bits")
-        previous_guesses.append(guess)
-        words_update(words, guess, generate_clue(guess, secret_word))
-        print(f"Suggested best guess: {suggest_best_guess(words, previous_guesses)}")
-        guess = suggest_best_guess(words, previous_guesses)
-        # guess_attempts += 1
-
-    return secret_word
-
-
-def convert_clue(clue_passed) -> str:
+def convert_clue(clue_passed: list[str]) -> list[str]:
     clue = []
     print(clue_passed)
-    for i in clue_passed:
-        if i == '0':
+    for clue_char in clue_passed:
+        if clue_char == '0':
             clue.append('B')
-        elif i == '1':
+        elif clue_char == '1':
             clue.append('Y')
         else:
             clue.append('G')
-    return ''.join(clue)
-
-# def main():
-#     stop = False
-#     with open('words.txt', 'r') as file:
-#         words = [line.strip() for line in file]
-#
-#     guess = 'crate'
-#     previous_guesses = []
-#
-#     guess_word_bot(words, guess, previous_guesses)
+    return clue
 
 
-def guess_word_bot(stop: bool, words: list[str], guess: str, clue) -> str:
+def guess_word_bot(stop: bool, words: list[str], guess: str, clue: list[str]) -> str:
     global previous_guesses
-    # guess_attempts = 0
     if not stop:
-        entropy = entropy_calculate(words, guess)
-        # print(f"Entropy for '{guess}': {entropy:.4f} bits")
         previous_guesses.append(guess)
         words_update(words, guess, convert_clue(clue))
-        # print(f"Suggested best guess: {suggest_best_guess(words, previous_guesses)}")
-        print(f"Prev guesses{previous_guesses}")
-        print(len(words))
-        guess = suggest_best_guess(words, previous_guesses)
-        # guess_attempts += 1
+        guess = suggest_best_guesses(words, previous_guesses, convert_clue(clue))[0]
         print(f"Guess {guess}")
         return guess
+
 
 # accessing the file with words and converting it into a list
 with open('words.txt', 'r') as file:
     words = [line.strip() for line in file]
 
-# randomly choosing the word to be guessed
-secret_word = words[random.randint(0, len(words)-1)]
-# print(secret_word)
-# ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
-#check for secret word gonys
+previous_guesses = []
 
-# guess = 'crate'
-# previous_guesses = []
-# average_guesses_num = 0
-#
-# for word in words:
-#     print(word)
-#     secret_word = word
-#     average_guesses_num += guess_word(words, guess, secret_word, previous_guesses)
-#
-# print(average_guesses_num/len(words))
 
-# print(f"Secret word is: {guess_word(words, guess, secret_word, previous_guesses)}")

@@ -14,8 +14,6 @@ global stop
 guess = 'crate'
 stop = False
 
-
-
 user_private_router = Router()
 user_private_router.message.filter(ChatTypesFilter(['private']))
 
@@ -35,13 +33,13 @@ class SolveWordle(StatesGroup):
     sixth_guess = State()
 
 
-async def get_clue(message: types.Message, state: FSMContext):
-    await state.update_data(clue=message.text)
-    data = await state.get_data()
-    clue = list(data['clue'])
-    await print(clue)
-    await state.clear()
-    return clue
+# async def get_clue(message: types.Message, state: FSMContext):
+#     await state.update_data(clue=message.text)
+#     data = await state.get_data()
+#     clue = list(data['clue'])
+#     await print(clue)
+#     await state.clear()
+#     return clue
 
 @user_private_router.message(StateFilter(None), CommandStart())
 async def start_command(message: types.Message, state: FSMContext):

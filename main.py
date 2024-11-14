@@ -116,14 +116,24 @@ def convert_clue(clue_passed: list[str]) -> list[str]:
     return clue
 
 
-def guess_word_bot(stop: bool, words: list[str], guess: str, clue: list[str]) -> str:
+def guess_word_bot(reset: bool, words: list[str], guess: str, clue: list[str]) -> str:
     global previous_guesses
-    if not stop:
-        previous_guesses.append(guess)
-        words_update(words, guess, convert_clue(clue))
-        guess = suggest_best_guesses(words, previous_guesses, convert_clue(clue))[0]
-        print(f"Guess {guess}")
-        return guess
+    if reset:
+        words, guess, clue = game_reset()
+    previous_guesses.append(guess)
+    words_update(words, guess, convert_clue(clue))
+    guess = suggest_best_guesses(words, previous_guesses, convert_clue(clue))[0]
+    return guess
+
+
+def game_reset():
+    global previous_guesses
+    with open('words.txt', 'r') as file:
+        words = [line.strip() for line in file]
+    previous_guesses = []
+    guess = 'crate'
+    clue = []
+    return words, guess, clue
 
 
 # accessing the file with words and converting it into a list

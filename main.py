@@ -3,6 +3,10 @@ import math
 import random
 
 global previous_guesses
+global words
+global guess
+global clue
+global best_guess_list
 
 
 # generating the clue (which letters are right and which are not) for the word entered
@@ -38,7 +42,6 @@ def entropy_calculate(words: list[str], guess: str) -> float:
 
     for word in words:
         clue = generate_clue(guess, word)
-        # print(clue)
         if clue in clue_frequency:
             clue_frequency[clue] += 1
         else:
@@ -55,9 +58,8 @@ def entropy_calculate(words: list[str], guess: str) -> float:
 
 
 # Suggests the best next guess by calculating the entropy for each possible guess
-def suggest_best_guesses(words: list[str], previous_guesses: list[str], clue: list[str]) -> list[str]:
+def suggest_best_guesses(words: list[str], previous_guesses: list[str]) -> list[str]:
     best_guess_list = []
-
     for guess in words:
         if guess in previous_guesses:
             continue  # Skip previously guessed words
@@ -105,7 +107,6 @@ def words_update(words: list[str], guess: str, clue: list[str]) -> list:
 
 def convert_clue(clue_passed: list[str]) -> list[str]:
     clue = []
-    print(clue_passed)
     for clue_char in clue_passed:
         if clue_char == '0':
             clue.append('B')
@@ -116,24 +117,26 @@ def convert_clue(clue_passed: list[str]) -> list[str]:
     return clue
 
 
-def guess_word_bot(reset: bool, words: list[str], guess: str, clue: list[str]) -> str:
+def guess_word_bot(guess: str, clue: list[str]) -> str:
+    global words
     global previous_guesses
-    if reset:
-        words, guess, clue = game_reset()
     previous_guesses.append(guess)
     words_update(words, guess, convert_clue(clue))
-    guess = suggest_best_guesses(words, previous_guesses, convert_clue(clue))[0]
-    return guess
+    best_guess_list = suggest_best_guesses(words, previous_guesses)
+    return best_guess_list[0]
 
 
 def game_reset():
     global previous_guesses
+    global words
+    global guess
+    global clue
     with open('words.txt', 'r') as file:
         words = [line.strip() for line in file]
     previous_guesses = []
     guess = 'crate'
     clue = []
-    return words, guess, clue
+    return None
 
 
 # accessing the file with words and converting it into a list

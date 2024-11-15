@@ -66,11 +66,8 @@ async def change_word_handler(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
     if current_state is None:
         return
-    solve_wordle([], False, True)
-    await state.update_data(clue=message.text)
-    data = await state.get_data()
-    print(data)
-    await message.answer(f"CHANGING THE WORD!")
+    guess = solve_wordle([], False, True)
+    await message.answer(f"Type in the new word - '{guess.upper()}', and send me the clue back!")
 
 
 @user_private_router.message(StateFilter(None), Command("solve"))
@@ -78,7 +75,6 @@ async def change_word_handler(message: types.Message, state: FSMContext):
 async def solve_command(message: types.Message, state: FSMContext):
     await message.answer(solve_start_text, reply_markup=types.ReplyKeyboardRemove())
     solve_wordle([], True, False)
-
     await state.set_state(SolveWordle.first_guess)
 
 
@@ -87,7 +83,7 @@ async def solve_command(message: types.Message, state: FSMContext):
 async def solve_first_guess(message: types.Message, state: FSMContext):
     clue = await clue_data_manage(message, state)
     guess = solve_wordle(clue, False, False)
-    print(f"Guess TG: {guess}")
+    # print(f"G1 Guess TG and Clue: {guess, clue}")
     await message.answer(f"Type in the word - '{guess.upper()}', and send me the clue back!")
     await state.set_state(SolveWordle.second_guess)
 
@@ -101,6 +97,7 @@ async def solve_first_guess(message: types.Message, state: FSMContext):
 async def solve_second_guess(message: types.Message, state: FSMContext):
     clue = await clue_data_manage(message, state)
     guess = solve_wordle(clue, False, False)
+    # print(f"G2 Guess TG and Clue: {guess, clue}")
     await message.answer(f"Type in the word - '{guess.upper()}', and send me the clue back!")
     await state.set_state(SolveWordle.third_guess)
 
@@ -117,8 +114,6 @@ async def solve_third_guess(message: types.Message, state: FSMContext):
 async def solve_fourth_guess(message: types.Message, state: FSMContext):
     clue = await clue_data_manage(message, state)
     guess = solve_wordle(clue, False, False)
-
-
     await message.answer(f"Type in the word - '{guess.upper()}', and send me the clue back!")
     await state.set_state(SolveWordle.fifth_guess)
 

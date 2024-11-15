@@ -9,6 +9,8 @@ global clue
 global best_guess_list
 
 
+
+
 # generating the clue (which letters are right and which are not) for the word entered
 def generate_clue(guess: str, word: str) -> str:
     """
@@ -54,25 +56,36 @@ def entropy_calculate(words: list[str], guess: str) -> float:
         probability = frequency/total_words
         entropy -= probability * math.log2(probability)
 
+    # print(f"Entropy calculated: {entropy}")  # Confirm result
+
     return entropy
 
 
 # Suggests the best next guess by calculating the entropy for each possible guess
 def suggest_best_guesses(words: list[str], previous_guesses: list[str]) -> list[str]:
     best_guess_list = []
-    for guess in words:
+
+    #print("Starting suggest_best_guesses...")  # Debug entry
+
+    for index, guess in enumerate(words):
         if guess in previous_guesses:
-            continue  # Skip previously guessed words
+            #print(f"Skipping {guess} (already guessed).")  # Debug skip
+            continue
+
+        #print(f"Processing guess {index + 1}/{len(words)}: {guess}")  # Progress debug
 
         entropy = entropy_calculate(words, guess)
+        # print(f"Entropy for {guess}: {entropy}")  # Show calculated entropy)
 
-        if len(best_guess_list) < 5 and guess:
-            best_guess_list.append((entropy,guess))
+        if len(best_guess_list) < 5:
+            best_guess_list.append((entropy, guess))
             best_guess_list.sort(reverse=True, key=lambda x: x[0])
         else:
             if entropy > best_guess_list[-1][0]:
                 best_guess_list[-1] = (entropy, guess)
                 best_guess_list.sort(reverse=True, key=lambda x: x[0])
+
+    #print(f"Final Best Guess List: {best_guess_list}")
     return [guess for _, guess in best_guess_list]
 
 
@@ -117,12 +130,37 @@ def convert_clue(clue_passed: list[str]) -> list[str]:
     return clue
 
 
-def guess_word_bot(guess: str, clue: list[str]) -> str:
+def get_different_words(words: list[str], best_guess_list: list[str]):
+    words.remove(best_guess_list[0])
+    best_guess_list.remove(best_guess_list[0])
+    return best_guess_list
+
+
+def solve_wordle(clue: list[str], first_guess: bool, change_word: bool):
     global words
     global previous_guesses
-    previous_guesses.append(guess)
-    words_update(words, guess, convert_clue(clue))
+    global best_guess_list
+    print(clue, first_guess, game_reset, change_word)
+
+    if first_guess:
+        # accessing the file with words and converting it into a list
+        with open('words.txt', 'r') as file:
+            words = [line.strip() for line in file]
+        previous_guesses = ['crate']
+        best_guess_list = ['crate']
+        return
+
+    #print(f"Clue: {clue} Words: {len(words)} Prev Guess: {previous_guesses}")
+
+    if change_word:
+        print("Entered 1")
+        best_guess_list = get_different_words(words, best_guess_list)
+        return best_guess_list[0]
+
+    words = words_update(words, best_guess_list[0], convert_clue(clue))
     best_guess_list = suggest_best_guesses(words, previous_guesses)
+    print(f"Best Guess List: {best_guess_list}")
+    previous_guesses.append(best_guess_list[0])
     return best_guess_list[0]
 
 
@@ -139,10 +177,8 @@ def game_reset():
     return None
 
 
-# accessing the file with words and converting it into a list
-with open('words.txt', 'r') as file:
-    words = [line.strip() for line in file]
 
-previous_guesses = []
+
+
 
 

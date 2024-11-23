@@ -109,14 +109,14 @@ def words_update(words: list[str], guess: str, clue: list[str]) -> list[str]:
             if clue[index_char] == "G":
                 # Green: must match exactly
                 if guess[index_char] != word[index_char]:
-                    print(f"  Removing {word}: Green mismatch at {index_char}")
+                    # print(f"  Removing {word}: Green mismatch at {index_char}")
                     valid = False
                     break
 
             elif clue[index_char] == "Y":
                 # Yellow: must exist but not in the same position
                 if guess[index_char] not in word or word[index_char] == guess[index_char]:
-                    print(f"  Removing {word}: Yellow mismatch at {index_char}")
+                    # print(f"  Removing {word}: Yellow mismatch at {index_char}")
                     valid = False
                     break
 
@@ -128,7 +128,7 @@ def words_update(words: list[str], guess: str, clue: list[str]) -> list[str]:
                         for pos in range(5)
                     ):
                         continue  # Letter is valid due to other clue
-                    print(f"  Removing {word}: Black mismatch at {index_char}")
+                    # print(f"  Removing {word}: Black mismatch at {index_char}")
                     valid = False
                     break
 

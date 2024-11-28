@@ -1,7 +1,7 @@
-# importing required libraries
+# importing required library
 import math
-import random
 
+# Declaring global variables
 global previous_guesses
 global words
 global guess
@@ -9,17 +9,15 @@ global clue
 global best_guess_list
 
 
-
-
-# generating the clue (which letters are right and which are not) for the word entered
+# This function generates a clue for a guessed word compared to a single word passed.
 def generate_clue(guess: str, word: str) -> str:
     """
-        Generates a clue for the given guess compared to a single actual word.
+    Generates a clue for the given guess compared to a single actual word.
 
-        :param guess: The guessed word.
-        :param word: The actual word.
-        :return: Clue string (e.g., "GBYBB").
-        """
+    :param guess: The guessed word.
+    :param word: The actual word.
+    :return: Clue string (e.g., "GBYBB").
+    """
     clue = ["B"] * 5  # Start with all Black clues
     word_remaining = list(word)  # Track unused letters in the word
 
@@ -38,8 +36,15 @@ def generate_clue(guess: str, word: str) -> str:
     return "".join(clue)
 
 
-# The function runs a guess against all possible hidden words and counts clue frequencies
+# Calculates the entropy (information gain) for a given guess against all possible words.
 def entropy_calculate(words: list[str], guess: str) -> float:
+    """
+    Calculates the entropy (information gain) for a given guess against all possible words.
+
+    :param words: List of possible words.
+    :param guess: The guessed word to evaluate.
+    :return: Calculated entropy value as a float.
+    """
     clue_frequency = {}
 
     for word in words:
@@ -56,26 +61,25 @@ def entropy_calculate(words: list[str], guess: str) -> float:
         probability = frequency/total_words
         entropy -= probability * math.log2(probability)
 
-    # print(f"Entropy calculated: {entropy}")  # Confirm result
-
     return entropy
 
 
-# Suggests the best next guess by calculating the entropy for each possible guess
+# This function iterates through the possible words and ranks them by calculated entropy.
 def suggest_best_guesses(words: list[str], previous_guesses: list[str]) -> list[str]:
-    best_guess_list = []
+    """
+    Suggests the top 5 most informative guesses based on calculated entropy.
 
-    #print("Starting suggest_best_guesses...")  # Debug entry
+    :param words: List of possible words.
+    :param previous_guesses: List of words already guessed.
+    :return: List of the top 5 best guesses.
+    """
+    best_guess_list = []
 
     for index, guess in enumerate(words):
         if guess in previous_guesses:
-            #print(f"Skipping {guess} (already guessed).")  # Debug skip
             continue
 
-        #print(f"Processing guess {index + 1}/{len(words)}: {guess}")  # Progress debug
-
         entropy = entropy_calculate(words, guess)
-        #print(f"Entropy for {guess}: {entropy}")  # Show calculated entropy)
 
         if len(best_guess_list) < 5:
             best_guess_list.append((entropy, guess))
@@ -85,19 +89,18 @@ def suggest_best_guesses(words: list[str], previous_guesses: list[str]) -> list[
                 best_guess_list[-1] = (entropy, guess)
                 best_guess_list.sort(reverse=True, key=lambda x: x[0])
 
-    #print(f"Final Best Guess List: {best_guess_list}")
     return [guess for _, guess in best_guess_list]
 
 
 # Update the list of words after the guess based on the clue given
 def words_update(words: list[str], guess: str, clue: list[str]) -> list[str]:
     """
-    Updates the list of words based on guess and clue, ensuring correct filtering.
+    Updates the list of words based on the provided guess and clue, ensuring correct filtering.
 
     :param words: List of possible words.
     :param guess: The guessed word.
     :param clue: List of clues for each position ('G', 'Y', 'B').
-    :return: Filtered list of words.
+    :return: Filtered list of remaining valid words.
     """
     print(f"Updating words based on guess '{guess}' and clue '{clue}'")
 
@@ -139,7 +142,14 @@ def words_update(words: list[str], guess: str, clue: list[str]) -> list[str]:
     return words
 
 
+# Converts numerical clues (e.g., "0" for Black, "1" for Yellow, "2" for Green) into string format ("B", "Y", "G").
 def convert_clue(clue_passed: list[str]) -> list[str]:
+    """
+    Converts numerical clues into string format ('0' -> 'B', '1' -> 'Y', '2' -> 'G').
+
+    :param clue_passed: List of numeric clues (e.g., ['0', '1', '2']).
+    :return: List of string clues (e.g., ['B', 'Y', 'G']).
+    """
     clue = []
     for clue_char in clue_passed:
         if clue_char == '0':
@@ -151,14 +161,34 @@ def convert_clue(clue_passed: list[str]) -> list[str]:
     return clue
 
 
+# Updates the list of best guesses by removing the previous guess and finding the next best guess.
 def get_different_words(words: list[str], best_guess_list: list[str]):
+    """
+    Suggests new best guesses by removing the current best guess and re-evaluating entropy.
+
+    :param words: List of possible words.
+    :param best_guess_list: List of the current best guesses.
+    :return: Updated list of the top best guesses.
+    """
     removed_word = best_guess_list[0]
     if removed_word in words:
         words.remove(removed_word)
     return suggest_best_guesses(words, previous_guesses)
 
 
+# Core function to solve the Wordle game:
+# - Initializes the word list and guesses.
+# - Handles updates to the word list and best guesses after each round.
+# - Allows resetting the logic to suggest a different word if needed.
 def solve_wordle(clue: list[str], first_guess: bool, change_word: bool):
+    """
+    Solves the Wordle puzzle based on clues and updates the word list and guesses.
+
+    :param clue: Clue from the previous guess.
+    :param first_guess: Boolean indicating if it's the first guess.
+    :param change_word: Boolean indicating if a new word needs to be selected.
+    :return: The next best guess word.
+    """
     global words
     global previous_guesses
     global best_guess_list

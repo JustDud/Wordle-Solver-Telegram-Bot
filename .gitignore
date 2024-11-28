@@ -1,6 +1,5 @@
 
 .env
 tester.py
-user_group.py
-admin_private.py
-filters
+/admin_private.py
+/user_group.py

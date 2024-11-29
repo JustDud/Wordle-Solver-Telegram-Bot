@@ -46,11 +46,6 @@ WordleSolver-TG-Bot is a Python-based project that combines a Wordle puzzle solv
 - **Libraries:** aiogram, python-dotenv
 - **Algorithm:** Entropy-based optimisation for solving Wordle puzzles.
 
-## Visual Overview
-Below is an example of the bot in action, showcasing its Telegram interface and solving capabilities.
-
-![Wordle Solver Telegram Bot](images/telegram_bot_interface.png)
-
 ## Contributing
 Contributions are welcome! To contribute:
 1. Fork the repository.
